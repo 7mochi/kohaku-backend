@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+databases = {extras = ["asyncpg"], version = "*"}
+structlog = "*"
+python-dotenv = "*"
+fastapi = {extras = ["all"], version = "*"}
+"discord.py" = "*"
+aiosu = "*"
+asyncpg = "*"
+
+[dev-packages]
+black = "*"
+pre-commit = "*"
+reorder-python-imports = "*"
+
+[requires]
+python_version = "3.11"
