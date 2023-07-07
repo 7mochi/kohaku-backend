@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from app.common import logger
-from app.common.errors import ServiceError
-from app.common.typing import UNSET
-from app.common.typing import Unset
-from app.repositories import users
-from app.repositories.users import User
+from common import logger
+from common.errors import ServiceError
+from common.typing import UNSET
+from common.typing import Unset
+from repositories import users
+from repositories.users import User
 
 
 async def create(

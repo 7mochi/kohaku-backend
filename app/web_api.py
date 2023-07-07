@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import atexit
 
+from api.auth import auth_router
+from common import lifecycle
+from common import logger
+from common import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.api.auth import auth_router
-from app.common import lifecycle
-from app.common import logger
-from app.common import settings
 
 logger.configure_logging(
     app_env=settings.APP_ENV,

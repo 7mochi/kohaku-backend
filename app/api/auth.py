@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 from aiosu.utils import auth
+from common import settings
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Response
-from orjson import JSONDecodeError
-
-from app.common import settings
-from app.services import users
+from services import users
 
 auth_router = APIRouter(default_response_class=Response)
 
