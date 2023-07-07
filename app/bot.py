@@ -82,9 +82,6 @@ class Bot(discord.Client):
 
         logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
 
-    async def run(self, token: str, *args, **kwargs) -> None:
-        await self.start(token, *args, **kwargs)
-
     async def on_message(self, message: discord.Message) -> None:
         ignore = not message.guild
         ignore |= message.author.bot
