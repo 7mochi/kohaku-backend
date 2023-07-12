@@ -1,16 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 import base64
 import ssl
 
-import aiosu
-import discord
-
-from app.adapters import database
-from app.common import clients
-from app.common import logger
-from app.common import settings
+from adapters import database
+from common import clients
+from common import logger
+from common import settings
 
 
 async def _start_database():
@@ -62,39 +58,9 @@ async def _shutdown_database():
     logger.info("Closed database connection")
 
 
-async def _start_discord_bot():
-    logger.info("Starting discord bot...")
-
-    intents = discord.Intents.default()
-    intents.message_content = True
-
-    # TODO: I don't like this import here but idk how to solve the circular import
-    # Most likely a skill issue :sob:
-    from app.adapters import bot
-
-    clients.discord_bot = bot.Bot(
-        intents=intents,
-        verify_channel_id=settings.DISCORD_VERIFY_CHANNEL_ID,
-    )
-
-    loop = asyncio.get_event_loop()
-    loop.create_task(clients.discord_bot.start(settings.DISCORD_BOT_TOKEN))
-
-    logger.info("Started discord bot")
-
-
-async def _stop_discord_bot():
-    logger.info("Stopping discord bot...")
-    await clients.discord_bot.close()
-    del clients.discord_bot
-    logger.info("Stopped discord bot")
-
-
 async def start():
     await _start_database()
-    await _start_discord_bot()
 
 
 async def shutdown():
     await _shutdown_database()
-    await _stop_discord_bot()

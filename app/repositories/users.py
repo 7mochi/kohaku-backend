@@ -4,9 +4,9 @@ from datetime import datetime
 from typing import cast
 from typing import TypedDict
 
-from app.common import clients
-from app.common.typing import UNSET
-from app.common.typing import Unset
+from common import clients
+from common.typing import UNSET
+from common.typing import Unset
 
 READ_PARAMS = """
     user_id,

@@ -12,7 +12,10 @@ else
   EXTRA_ARGUMENTS=""
 fi
 
-exec uvicorn main:app \
+cd app
+export PYTHONPATH=$PWD
+
+exec uvicorn web_api:app \
   --host "$APP_HOST" \
   --port "$APP_PORT" \
   $EXTRA_ARGUMENTS

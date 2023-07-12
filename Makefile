@@ -21,7 +21,7 @@ clean:
 	pipenv clean
 
 run-app:
-	pipenv run scripts/run-kohaku.sh
+	pipenv run scripts/bootstrap.sh
 
 deploy:
 	PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
