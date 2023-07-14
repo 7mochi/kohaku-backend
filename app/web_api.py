@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import atexit
 
-from api.auth import auth_router
+from api.osu.auth import auth_router
 from common import lifecycle
 from common import logger
 from common import settings

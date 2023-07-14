@@ -11,6 +11,7 @@ fastapi = {extras = ["all"], version = "*"}
 "discord.py" = "*"
 aiosu = "*"
 asyncpg = "*"
+fastapi-sessions = "*"
 
 [dev-packages]
 black = "*"

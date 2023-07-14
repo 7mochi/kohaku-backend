@@ -10,16 +10,24 @@ from repositories.users import User
 
 async def create(
     discord_id: int,
-    username: str,
+    discord_username: str,
     verified: bool,
     verification_code: str,
+    osu_id: int | None = None,
+    osu_username: str | None = None,
+    access_token: str | None = None,
+    refresh_token: str | None = None,
 ) -> User | ServiceError:
     try:
         user = await users.create(
             discord_id=discord_id,
-            username=username,
+            discord_username=discord_username,
+            osu_id=osu_id,
+            osu_username=osu_username,
             verified=verified,
             verification_code=verification_code,
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
     except Exception as exc:  # pragma: no cover
         logger.error("Failed to create user", exc_info=exc)
@@ -67,9 +75,9 @@ async def fetch_by_discord_id(discord_id: int) -> User | ServiceError:
     return user
 
 
-async def fetch_by_username(username: str) -> User | ServiceError:
+async def fetch_by_discord_username(discord_username: str) -> User | ServiceError:
     try:
-        user = await users.fetch_by_username(username)
+        user = await users.fetch_by_discord_username(discord_username)
     except Exception as exc:  # pragma: no cover
         logger.error("Failed to fetch user", exc_info=exc)
         return ServiceError.INTERNAL_SERVER_ERROR
@@ -96,17 +104,25 @@ async def fetch_by_verification_code(verification_code: str) -> User | ServiceEr
 async def partial_update(
     user_id: int,
     discord_id: str | Unset = UNSET,
-    username: str | Unset = UNSET,
+    discord_username: str | Unset = UNSET,
+    osu_id: str | Unset = UNSET,
+    osu_username: str | Unset = UNSET,
     verified: bool | Unset = UNSET,
     verification_code: str | Unset = UNSET,
+    access_token: str | Unset = UNSET,
+    refresh_token: str | Unset = UNSET,
 ) -> User | ServiceError:
     try:
         user = await users.partial_update(
             user_id=user_id,
             discord_id=discord_id,
-            username=username,
+            discord_username=discord_username,
+            osu_id=osu_id,
+            osu_username=osu_username,
             verified=verified,
             verification_code=verification_code,
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
     except Exception as exc:  # pragma: no cover
         logger.error("Failed to update user", exc_info=exc)

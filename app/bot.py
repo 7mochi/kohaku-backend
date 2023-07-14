@@ -124,7 +124,7 @@ class AuthenticationView(discord.ui.View):
 
                 user = await users.create(
                     discord_id=interaction.user.id,
-                    username=interaction.user.name,
+                    discord_username=interaction.user.name,
                     verified=False,
                     verification_code=code,
                 )
