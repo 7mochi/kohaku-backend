@@ -68,7 +68,9 @@ async def auth_handler(request: Request):
 
     client_storage = aiosu.v2.Client(token=token)
     osu_user = await client_storage.get_me()
+    await client_storage.close()
 
+    session = uuid4()
     user = await users.partial_update(
         user_id=user["user_id"],
         osu_id=osu_user.id,
@@ -76,9 +78,9 @@ async def auth_handler(request: Request):
         verified=True,
         access_token=token.access_token,
         refresh_token=token.refresh_token,
+        session_id=session,
     )
 
-    session = uuid4()
     user_mdl = User.parse_obj(user)
     await cookie_backend.create(session_id=session, data=user_mdl)
 
@@ -88,7 +90,38 @@ async def auth_handler(request: Request):
     logger.info(
         f"User {user['discord_username']} ({user['discord_id']}) with osu! account {user['osu_username']} ({user['osu_id']}) verified successfully",
     )
+
     return response
+
+
+@auth_router.post("/deauth", dependencies=[Depends(cookie)])
+async def deauth_handler(request: Request, user: User = Depends(cookie_verifier)):
+    user = await users.fetch_by_discord_id(user.discord_id)
+
+    if isinstance(user, users.ServiceError):
+        if user is users.ServiceError.USER_NOT_FOUND:
+            raise HTTPException(status_code=404, detail="User not found")
+
+    if not user["verified"]:
+        raise HTTPException(status_code=403, detail="User not verified")
+
+    await cookie_backend.delete(session_id=user["session_id"])
+
+    logger.info(
+        f"User {user['discord_username']} ({user['discord_id']}) with osu! account {user['osu_username']} ({user['osu_id']}) deauthenticated successfully",
+    )
+
+    user = await users.partial_update(
+        user_id=user["user_id"],
+        osu_id=None,
+        osu_username=None,
+        verified=False,
+        access_token=None,
+        refresh_token=None,
+        session_id=None,
+    )
+
+    return Response(status_code=200)
 
 
 @auth_router.get("/user", dependencies=[Depends(cookie)])

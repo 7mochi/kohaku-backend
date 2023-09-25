@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import cast
 from typing import TypedDict
+from uuid import UUID
 
 from common import clients
 from common.typing import UNSET
@@ -18,6 +19,7 @@ READ_PARAMS = """
     verification_code,
     access_token,
     refresh_token,
+    session_id,
     created_at,
     updated_at
 """
@@ -33,6 +35,7 @@ class User(TypedDict):
     verification_code: str
     access_token: str | None
     refresh_token: str | None
+    session_id: UUID | None
     created_at: datetime
     updated_at: datetime
 
@@ -57,15 +60,16 @@ async def create(
     verification_code: str,
     access_token: str | None = None,
     refresh_token: str | None = None,
+    session_id: UUID | None = None,
 ) -> User:
     user = await clients.database.fetch_one(
         query=f"""\
             INSERT INTO users (discord_id, discord_username, osu_id, osu_username,
                                verified, verification_code, access_token, refresh_token,
-                               created_at, updated_at)
+                               session_id, created_at, updated_at)
             VALUES (:discord_id, :discord_username, :osu_id, :osu_username,
                     :verified, :verification_code,:access_token, :refresh_token,
-                    NOW(), NOW())
+                    :session_id, NOW(), NOW())
             RETURNING {READ_PARAMS}
         """,
         values={
@@ -77,6 +81,7 @@ async def create(
             "verification_code": verification_code,
             "access_token": access_token,
             "refresh_token": refresh_token,
+            "session_id": session_id,
         },
     )
 
@@ -175,6 +180,7 @@ async def partial_update(
     verification_code: str | Unset = UNSET,
     access_token: str | Unset = UNSET,
     refresh_token: str | Unset = UNSET,
+    session_id: UUID | Unset = UNSET,
 ) -> User | None:
     update_fields = UserUpdateFields = {}
     if not isinstance(discord_id, Unset):
@@ -193,6 +199,8 @@ async def partial_update(
         update_fields["access_token"] = access_token
     if not isinstance(refresh_token, Unset):
         update_fields["refresh_token"] = refresh_token
+    if not isinstance(session_id, Unset):
+        update_fields["session_id"] = session_id
 
     query = f"""\
         UPDATE users

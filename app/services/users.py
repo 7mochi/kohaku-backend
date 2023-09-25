@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from uuid import UUID
+
 from common import logger
 from common.errors import ServiceError
 from common.typing import UNSET
@@ -17,6 +19,7 @@ async def create(
     osu_username: str | None = None,
     access_token: str | None = None,
     refresh_token: str | None = None,
+    session_id: UUID | None = None,
 ) -> User | ServiceError:
     try:
         user = await users.create(
@@ -28,6 +31,7 @@ async def create(
             verification_code=verification_code,
             access_token=access_token,
             refresh_token=refresh_token,
+            session_id=session_id,
         )
     except Exception as exc:  # pragma: no cover
         logger.error("Failed to create user", exc_info=exc)
@@ -111,6 +115,7 @@ async def partial_update(
     verification_code: str | Unset = UNSET,
     access_token: str | Unset = UNSET,
     refresh_token: str | Unset = UNSET,
+    session_id: UUID | None = None,
 ) -> User | ServiceError:
     try:
         user = await users.partial_update(
@@ -123,6 +128,7 @@ async def partial_update(
             verification_code=verification_code,
             access_token=access_token,
             refresh_token=refresh_token,
+            session_id=session_id,
         )
     except Exception as exc:  # pragma: no cover
         logger.error("Failed to update user", exc_info=exc)

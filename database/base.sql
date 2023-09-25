@@ -8,6 +8,7 @@ CREATE TABLE users (
     verification_code TEXT NOT NULL,
     access_token TEXT NULL,
     refresh_token TEXT NULL,
+    session_id UUID NULL,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL
 );
