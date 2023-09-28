@@ -8,7 +8,7 @@ fi
 
 case $APP_COMPONENT in
   "api")
-    exec scripts/run-api.sh
+    exec scripts/run_api.sh
     ;;
 
   "bot")
