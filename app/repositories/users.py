@@ -27,9 +27,9 @@ READ_PARAMS = """
 
 class User(TypedDict):
     user_id: int
-    discord_id: int
+    discord_id: str
     discord_username: str
-    osu_id: int | None
+    osu_id: str | None
     osu_username: str | None
     verified: bool
     verification_code: str
@@ -41,9 +41,9 @@ class User(TypedDict):
 
 
 class UserUpdateFields(TypedDict, total=False):
-    discord_id: int
+    discord_id: str
     discord_username: str
-    osu_id: int | None
+    osu_id: str | None
     osu_username: str | None
     verified: bool
     verification_code: str
@@ -53,9 +53,9 @@ class UserUpdateFields(TypedDict, total=False):
 
 
 async def create(
-    discord_id: int,
+    discord_id: str,
     discord_username: str,
-    osu_id: int | None,
+    osu_id: str | None,
     osu_username: str | None,
     verified: bool,
     verification_code: str,
@@ -126,7 +126,7 @@ async def fetch_by_user_id(user_id: int) -> User | None:
     return cast(User, user) if user is not None else None
 
 
-async def fetch_by_discord_id(discord_id: int) -> User | None:
+async def fetch_by_discord_id(discord_id: str) -> User | None:
     user = await clients.database.fetch_one(
         query=f"""\
             SELECT {READ_PARAMS}
@@ -173,9 +173,9 @@ async def fetch_by_verification_code(verification_code: str) -> User | None:
 
 async def partial_update(
     user_id: int,
-    discord_id: int | _UnsetSentinel = UNSET,
+    discord_id: str | _UnsetSentinel = UNSET,
     discord_username: str | _UnsetSentinel = UNSET,
-    osu_id: int | None | _UnsetSentinel = UNSET,
+    osu_id: str | None | _UnsetSentinel = UNSET,
     osu_username: str | None | _UnsetSentinel = UNSET,
     verified: bool | _UnsetSentinel = UNSET,
     verification_code: str | _UnsetSentinel = UNSET,

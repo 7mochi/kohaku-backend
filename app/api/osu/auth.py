@@ -74,7 +74,7 @@ async def auth_handler(request: Request) -> Response:
     session = uuid4()
     _user = await users.partial_update(
         user_id=user["user_id"],  # type: ignore
-        osu_id=osu_user.id,
+        osu_id=str(osu_user.id),
         osu_username=osu_user.username,
         verified=True,
         access_token=token.access_token,
