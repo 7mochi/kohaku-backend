@@ -24,4 +24,4 @@ clean:
 	pipenv clean
 
 run:
-	pipenv run scripts/run_api.sh
+	pipenv run scripts/bootstrap.sh
