@@ -113,7 +113,7 @@ class AuthenticationView(discord.ui.View):
         interaction: discord.Interaction,  # type: ignore
         button: discord.ui.Button,  # type: ignore
     ) -> None:
-        user = await users.fetch_by_discord_id(interaction.user.id)
+        user = await users.fetch_by_discord_id(str(interaction.user.id))
 
         if isinstance(user, ServiceError):
             if user is ServiceError.USER_NOT_FOUND:
@@ -128,7 +128,7 @@ class AuthenticationView(discord.ui.View):
                 )
 
                 user = await users.create(
-                    discord_id=interaction.user.id,
+                    discord_id=str(interaction.user.id),
                     discord_username=interaction.user.name,
                     verified=False,
                     verification_code=code,

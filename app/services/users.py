@@ -11,11 +11,11 @@ from repositories.users import User
 
 
 async def create(
-    discord_id: int,
+    discord_id: str,
     discord_username: str,
     verified: bool,
     verification_code: str,
-    osu_id: int | None = None,
+    osu_id: str | None = None,
     osu_username: str | None = None,
     access_token: str | None = None,
     refresh_token: str | None = None,
@@ -66,7 +66,7 @@ async def fetch_by_user_id(user_id: int) -> User | ServiceError:
     return user
 
 
-async def fetch_by_discord_id(discord_id: int) -> User | ServiceError:
+async def fetch_by_discord_id(discord_id: str) -> User | ServiceError:
     try:
         user = await users.fetch_by_discord_id(discord_id)
     except Exception as exc:  # pragma: no cover
@@ -107,9 +107,9 @@ async def fetch_by_verification_code(verification_code: str) -> User | ServiceEr
 
 async def partial_update(
     user_id: int,
-    discord_id: int | _UnsetSentinel = UNSET,
+    discord_id: str | _UnsetSentinel = UNSET,
     discord_username: str | _UnsetSentinel = UNSET,
-    osu_id: int | None | _UnsetSentinel = UNSET,
+    osu_id: str | None | _UnsetSentinel = UNSET,
     osu_username: str | None | _UnsetSentinel = UNSET,
     verified: bool | _UnsetSentinel = UNSET,
     verification_code: str | _UnsetSentinel = UNSET,
