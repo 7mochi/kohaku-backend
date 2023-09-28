@@ -8,7 +8,7 @@ from fastapi_sessions.backends.implementations import InMemoryBackend
 from fastapi_sessions.session_verifier import SessionVerifier
 
 
-class BasicVerifier(SessionVerifier[UUID, User]):
+class BasicVerifier(SessionVerifier[UUID, User]):  # type: ignore
     def __init__(
         self,
         *,
@@ -23,19 +23,19 @@ class BasicVerifier(SessionVerifier[UUID, User]):
         self._auth_http_exception = auth_http_exception
 
     @property
-    def identifier(self):
+    def identifier(self) -> str:
         return self._identifier
 
     @property
-    def backend(self):
+    def backend(self) -> InMemoryBackend[UUID, User]:
         return self._backend
 
     @property
-    def auto_error(self):
+    def auto_error(self) -> bool:
         return self._auto_error
 
     @property
-    def auth_http_exception(self):
+    def auth_http_exception(self) -> HTTPException:
         return self._auth_http_exception
 
     def verify_session(self, model: User) -> bool:

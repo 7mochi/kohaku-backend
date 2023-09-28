@@ -6,6 +6,7 @@ import sys
 import traceback
 from contextvars import ContextVar
 from types import TracebackType
+from typing import Any
 
 import structlog
 from structlog.types import EventDict
@@ -18,6 +19,8 @@ _ROOT_LOGGER = stdlib_logging.getLogger()
 
 _REQUEST_ID_CONTEXT: ContextVar[str | None] = ContextVar("request_id")
 
+_default_excepthook: Any
+
 
 def set_request_id(request_id: str | None) -> None:
     _REQUEST_ID_CONTEXT.set(request_id)
@@ -27,7 +30,7 @@ def get_request_id() -> str | None:
     return _REQUEST_ID_CONTEXT.get(None)
 
 
-def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
+def get_logger(name: str | None = None) -> Any:
     return structlog.wrap_logger(_ROOT_LOGGER, logger_name=name or "root")
 
 
@@ -48,7 +51,7 @@ def add_request_id(_: WrappedLogger, __: str, event_dict: EventDict) -> EventDic
 
 
 # https://github.com/hynek/structlog/issues/35#issuecomment-591321744
-def rename_event_key(_, __, event_dict: EventDict) -> EventDict:
+def rename_event_key(_: Any, __: Any, event_dict: EventDict) -> EventDict:
     """
     Log entries keep the text message in the `event` field, but Datadog
     uses the `message` field. This processor moves the value from one field to
@@ -59,7 +62,7 @@ def rename_event_key(_, __, event_dict: EventDict) -> EventDict:
     return event_dict
 
 
-def drop_color_message_key(_, __, event_dict: EventDict) -> EventDict:
+def drop_color_message_key(_: Any, __: Any, event_dict: EventDict) -> EventDict:
     """
     Uvicorn logs the message a second time in the extra `color_message`, but we don't
     need it. This processor drops the key from the event dict if it exists.
@@ -77,6 +80,7 @@ def configure_logging(app_env: str, log_level: str | int) -> None:
         drop_color_message_key,
     ]
 
+    log_renderer: Processor
     if log_as_text(app_env):
         log_renderer = structlog.dev.ConsoleRenderer()
     else:
@@ -125,23 +129,23 @@ def configure_logging(app_env: str, log_level: str | int) -> None:
     stdlib_logging.getLogger("uvicorn.access").propagate = False
 
 
-def debug(*args, **kwargs) -> None:
+def debug(*args: Any, **kwargs: Any) -> Any:
     return get_logger().debug(*args, **kwargs)
 
 
-def info(*args, **kwargs) -> None:
+def info(*args: Any, **kwargs: Any) -> Any:
     return get_logger().info(*args, **kwargs)
 
 
-def warning(*args, **kwargs) -> None:
+def warning(*args: Any, **kwargs: Any) -> Any:
     return get_logger().warning(*args, **kwargs)
 
 
-def error(*args, **kwargs) -> None:
+def error(*args: Any, **kwargs: Any) -> Any:
     return get_logger().error(*args, **kwargs)
 
 
-def critical(*args, **kwargs) -> None:
+def critical(*args: Any, **kwargs: Any) -> Any:
     return get_logger().critical(*args, **kwargs)
 
 
@@ -152,7 +156,7 @@ def overwrite_exception_hook() -> None:
     def exception_hook(
         exc_type: type[BaseException],
         exc_value: BaseException,
-        exc_traceback: TracebackType,
+        exc_traceback: TracebackType | None,
     ) -> None:
         if issubclass(exc_type, KeyboardInterrupt):
             sys.__excepthook__(exc_type, exc_value, exc_traceback)

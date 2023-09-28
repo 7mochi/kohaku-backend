@@ -12,8 +12,8 @@ from pydantic import BaseModel
 
 
 class User(BaseModel):
-    user_id: int
-    discord_id: str
+    user_id: int | None
+    discord_id: int
     discord_username: str
     osu_id: str
     osu_username: str

@@ -9,7 +9,7 @@ from common import logger
 from common import settings
 
 
-async def _start_database():
+async def _start_database() -> None:
     logger.info("Connecting to database...")
     clients.database = database.Database(
         read_dsn=database.dsn(
@@ -51,16 +51,16 @@ async def _start_database():
     logger.info("Connected to database(s)")
 
 
-async def _shutdown_database():
+async def _shutdown_database() -> None:
     logger.info("Closing database connection...")
     await clients.database.disconnect()
     del clients.database
     logger.info("Closed database connection")
 
 
-async def start():
+async def start() -> None:
     await _start_database()
 
 
-async def shutdown():
+async def shutdown() -> None:
     await _shutdown_database()

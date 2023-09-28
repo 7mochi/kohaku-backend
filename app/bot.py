@@ -48,11 +48,11 @@ def immediate_exit(signal_enum: Signals, loop: AbstractEventLoop) -> None:
 
 
 class Bot(discord.Client):
-    def __init__(self, verify_channel_id, *args, **kwargs) -> None:
+    def __init__(self: Any, verify_channel_id: int, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.verify_channel_id = verify_channel_id
 
-    async def start(self, *args, **kwargs) -> None:
+    async def start(self, *args: Any, **kwargs: Any) -> None:
         await super().start(*args, **kwargs)
 
     async def close(self, *args: Any, **kwargs: Any) -> None:
@@ -63,23 +63,28 @@ class Bot(discord.Client):
         logger.info("Persistent button registered")
 
         channel = self.get_channel(self.verify_channel_id)
-        latest_messages = [message async for message in channel.history(limit=100)]
 
-        for message in latest_messages:
-            if message.author.id == self.user.id and len(message.components) > 0:
-                logger.info(
-                    "Found an already existing button for verification. The bot will not create a new one",
-                )
-                return
+        if isinstance(channel, discord.TextChannel):
+            latest_messages = [message async for message in channel.history(limit=100)]
 
-        await channel.send("", view=AuthenticationView())
-        logger.info("Verification button created")
+            for message in latest_messages:
+                assert self.user is not None
+
+                if message.author.id == self.user.id and len(message.components) > 0:
+                    logger.info(
+                        "Found an already existing button for verification. The bot will not create a new one",
+                    )
+                    return
+
+            await channel.send("", view=AuthenticationView())
+            logger.info("Verification button created")
 
     async def on_ready(self) -> None:
         # Register persistent view
         await self.setup_verify_channel()
         await lifecycle.start()
 
+        assert self.user is not None
         logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
 
     async def on_message(self, message: discord.Message) -> None:
@@ -89,12 +94,12 @@ class Bot(discord.Client):
         if ignore:
             return
 
-        await self.process_commands(message)
+        # await self.process_commands(message)
 
 
 class AuthenticationView(discord.ui.View):
     # Make the button persistent
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(timeout=None)
 
     @discord.ui.button(
@@ -105,8 +110,8 @@ class AuthenticationView(discord.ui.View):
     )
     async def button_callback(
         self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
+        interaction: discord.Interaction,  # type: ignore
+        button: discord.ui.Button,  # type: ignore
     ) -> None:
         user = await users.fetch_by_discord_id(interaction.user.id)
 
@@ -134,7 +139,7 @@ class AuthenticationView(discord.ui.View):
                     ephemeral=True,
                 )
 
-        if user["verified"]:
+        if user["verified"]:  # type: ignore
             logger.info(
                 f"User {interaction.user.name} ({interaction.user.id}) tried to verify again",
             )
@@ -146,7 +151,7 @@ class AuthenticationView(discord.ui.View):
             code = base64.urlsafe_b64encode(os.urandom(32)).rstrip(b"=").decode("ascii")
 
             user = await users.partial_update(
-                user_id=user["user_id"],
+                user_id=user["user_id"],  # type: ignore
                 verification_code=code,
             )
 
@@ -176,7 +181,7 @@ async def main() -> int:
         exit_func = partial(immediate_exit, signal_enum=signal_enum, loop=loop)
         loop.add_signal_handler(signal_enum, exit_func)
 
-    loop.run_until_complete(await bot.start(settings.DISCORD_BOT_TOKEN))
+    loop.run_until_complete(await bot.start(settings.DISCORD_BOT_TOKEN))  # type: ignore
 
     logger.info("Started discord bot")
 
