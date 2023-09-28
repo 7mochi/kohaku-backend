@@ -6,8 +6,8 @@ from typing import TypedDict
 from uuid import UUID
 
 from common import clients
+from common.typing import _UnsetSentinel
 from common.typing import UNSET
-from common.typing import Unset
 
 READ_PARAMS = """
     user_id,
@@ -27,9 +27,9 @@ READ_PARAMS = """
 
 class User(TypedDict):
     user_id: int
-    discord_id: str
+    discord_id: int
     discord_username: str
-    osu_id: str | None
+    osu_id: int | None
     osu_username: str | None
     verified: bool
     verification_code: str
@@ -41,14 +41,15 @@ class User(TypedDict):
 
 
 class UserUpdateFields(TypedDict, total=False):
-    discord_id: str
+    discord_id: int
     discord_username: str
-    osu_id: str
-    osu_username: str
+    osu_id: int | None
+    osu_username: str | None
     verified: bool
     verification_code: str
     access_token: str | None
     refresh_token: str | None
+    session_id: UUID | None
 
 
 async def create(
@@ -73,9 +74,9 @@ async def create(
             RETURNING {READ_PARAMS}
         """,
         values={
-            "discord_id": str(discord_id),
+            "discord_id": discord_id,
             "discord_username": discord_username,
-            "osu_id": str(osu_id),
+            "osu_id": osu_id,
             "osu_username": osu_username,
             "verified": verified,
             "verification_code": verification_code,
@@ -118,7 +119,7 @@ async def fetch_by_user_id(user_id: int) -> User | None:
             WHERE user_id = :user_id
         """,
         values={
-            "user_id": str(user_id),
+            "user_id": user_id,
         },
     )
 
@@ -133,7 +134,7 @@ async def fetch_by_discord_id(discord_id: int) -> User | None:
             WHERE discord_id = :discord_id
         """,
         values={
-            "discord_id": str(discord_id),
+            "discord_id": discord_id,
         },
     )
 
@@ -172,34 +173,34 @@ async def fetch_by_verification_code(verification_code: str) -> User | None:
 
 async def partial_update(
     user_id: int,
-    discord_id: int | Unset = UNSET,
-    discord_username: str | Unset = UNSET,
-    osu_id: str | Unset = UNSET,
-    osu_username: str | Unset = UNSET,
-    verified: bool | Unset = UNSET,
-    verification_code: str | Unset = UNSET,
-    access_token: str | Unset = UNSET,
-    refresh_token: str | Unset = UNSET,
-    session_id: UUID | Unset = UNSET,
+    discord_id: int | _UnsetSentinel = UNSET,
+    discord_username: str | _UnsetSentinel = UNSET,
+    osu_id: int | None | _UnsetSentinel = UNSET,
+    osu_username: str | None | _UnsetSentinel = UNSET,
+    verified: bool | _UnsetSentinel = UNSET,
+    verification_code: str | _UnsetSentinel = UNSET,
+    access_token: str | None | _UnsetSentinel = UNSET,
+    refresh_token: str | None | _UnsetSentinel = UNSET,
+    session_id: UUID | None | _UnsetSentinel = UNSET,
 ) -> User | None:
-    update_fields = UserUpdateFields = {}
-    if not isinstance(discord_id, Unset):
-        update_fields["discord_id"] = str(discord_id)
-    if not isinstance(discord_username, Unset):
+    update_fields: UserUpdateFields = {}
+    if not isinstance(discord_id, _UnsetSentinel):
+        update_fields["discord_id"] = discord_id
+    if not isinstance(discord_username, _UnsetSentinel):
         update_fields["discord_username"] = discord_username
-    if not isinstance(osu_id, Unset):
-        update_fields["osu_id"] = str(osu_id)
-    if not isinstance(osu_username, Unset):
+    if not isinstance(osu_id, _UnsetSentinel):
+        update_fields["osu_id"] = osu_id
+    if not isinstance(osu_username, _UnsetSentinel):
         update_fields["osu_username"] = osu_username
-    if not isinstance(verified, Unset):
+    if not isinstance(verified, _UnsetSentinel):
         update_fields["verified"] = verified
-    if not isinstance(verification_code, Unset):
+    if not isinstance(verification_code, _UnsetSentinel):
         update_fields["verification_code"] = verification_code
-    if not isinstance(access_token, Unset):
+    if not isinstance(access_token, _UnsetSentinel):
         update_fields["access_token"] = access_token
-    if not isinstance(refresh_token, Unset):
+    if not isinstance(refresh_token, _UnsetSentinel):
         update_fields["refresh_token"] = refresh_token
-    if not isinstance(session_id, Unset):
+    if not isinstance(session_id, _UnsetSentinel):
         update_fields["session_id"] = session_id
 
     query = f"""\

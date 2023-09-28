@@ -99,7 +99,7 @@ class Database:
     async def fetch_one(
         self,
         query: str,
-        values: dict | None = None,
+        values: dict[str, Any] | None = None,
     ) -> dict[str, Any] | None:
         async with self.read_pool.connection() as connection:
             rec = await connection.fetch_one(query, values)
@@ -109,14 +109,14 @@ class Database:
     async def fetch_all(
         self,
         query: str,
-        values: dict | None = None,
+        values: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         async with self.read_pool.connection() as connection:
             recs = await connection.fetch_all(query, values)
 
         return [dict(rec._mapping) for rec in recs]
 
-    async def fetch_val(self, query: str, values: dict | None = None) -> Any:
+    async def fetch_val(self, query: str, values: dict[str, Any] | None = None) -> Any:
         async with self.read_pool.connection() as connection:
             val = await connection.fetch_val(query, values)
 
@@ -125,14 +125,14 @@ class Database:
     async def execute(
         self,
         query: str,
-        values: dict | None = None,
+        values: dict[str, Any] | None = None,
     ) -> Any:  # TODO: this Any can surely be typed better
         async with self.write_pool.connection() as connection:
             result = await connection.execute(query, values)
 
         return result
 
-    async def execute_many(self, query: str, values: list) -> None:
+    async def execute_many(self, query: str, values: list[Any]) -> None:
         async with self.write_pool.connection() as connection:
             await connection.execute_many(query, values)
 

@@ -8,6 +8,7 @@ from aiosu.utils import auth
 from api.osu.models import User
 from common import logger
 from common import settings
+from common.errors import ServiceError
 from common.session_verifier import BasicVerifier
 from fastapi import APIRouter
 from fastapi import Depends
@@ -41,7 +42,7 @@ cookie_verifier = BasicVerifier(
 
 
 @auth_router.post("/auth")
-async def auth_handler(request: Request):
+async def auth_handler(request: Request) -> Response:
     body = await request.json()
     # TODO: Maybe also validate if both codes aren't empty
     if "kohaku_code" not in body or "osu_code" not in body:
@@ -49,11 +50,11 @@ async def auth_handler(request: Request):
 
     user = await users.fetch_by_verification_code(body["kohaku_code"])
 
-    if isinstance(user, users.ServiceError):
-        if user is users.ServiceError.USER_NOT_FOUND:
+    if isinstance(user, ServiceError):
+        if user is ServiceError.USER_NOT_FOUND:
             raise HTTPException(status_code=404, detail="User not found")
 
-    if user["verified"]:
+    if user["verified"]:  # type: ignore
         raise HTTPException(status_code=403, detail="User already verified")
 
     try:
@@ -71,8 +72,8 @@ async def auth_handler(request: Request):
     await client_storage.close()
 
     session = uuid4()
-    user = await users.partial_update(
-        user_id=user["user_id"],
+    _user = await users.partial_update(
+        user_id=user["user_id"],  # type: ignore
         osu_id=osu_user.id,
         osu_username=osu_user.username,
         verified=True,
@@ -81,38 +82,42 @@ async def auth_handler(request: Request):
         session_id=session,
     )
 
-    user_mdl = User.parse_obj(user)
+    user_mdl = User.parse_obj(_user)
     await cookie_backend.create(session_id=session, data=user_mdl)
 
     response = Response(user_mdl.json(), status_code=200, media_type="application/json")
     cookie.attach_to_response(response, session)
 
     logger.info(
-        f"User {user['discord_username']} ({user['discord_id']}) with osu! account {user['osu_username']} ({user['osu_id']}) verified successfully",
+        f"User {_user['discord_username']} ({_user['discord_id']}) with osu! account {_user['osu_username']} ({_user['osu_id']}) verified successfully",  # type: ignore
     )
 
     return response
 
 
 @auth_router.post("/deauth", dependencies=[Depends(cookie)])
-async def deauth_handler(request: Request, user: User = Depends(cookie_verifier)):
-    user = await users.fetch_by_discord_id(user.discord_id)
+async def deauth_handler(
+    request: Request,
+    user: User = Depends(cookie_verifier),
+) -> Response:
+    _user = await users.fetch_by_discord_id(user.discord_id)
 
-    if isinstance(user, users.ServiceError):
-        if user is users.ServiceError.USER_NOT_FOUND:
+    if isinstance(_user, ServiceError):
+        if _user is ServiceError.USER_NOT_FOUND:
             raise HTTPException(status_code=404, detail="User not found")
 
-    if not user["verified"]:
+    if not _user["verified"]:  # type: ignore
         raise HTTPException(status_code=403, detail="User not verified")
 
-    await cookie_backend.delete(session_id=user["session_id"])
+    await cookie_backend.delete(session_id=_user["session_id"])  # type: ignore
 
     logger.info(
-        f"User {user['discord_username']} ({user['discord_id']}) with osu! account {user['osu_username']} ({user['osu_id']}) deauthenticated successfully",
+        f"User {_user['discord_username']} ({_user['discord_id']}) with osu! account {_user['osu_username']} ({_user['osu_id']}) deauthenticated successfully",  # type: ignore
     )
 
-    user = await users.partial_update(
-        user_id=user["user_id"],
+    assert _user is not None
+    await users.partial_update(
+        user_id=_user["user_id"],  # type: ignore
         osu_id=None,
         osu_username=None,
         verified=False,
@@ -125,5 +130,5 @@ async def deauth_handler(request: Request, user: User = Depends(cookie_verifier)
 
 
 @auth_router.get("/user", dependencies=[Depends(cookie)])
-async def user_handler(user: User = Depends(cookie_verifier)):
+async def user_handler(user: User = Depends(cookie_verifier)) -> Response:
     return Response(user.json(), media_type="application/json")

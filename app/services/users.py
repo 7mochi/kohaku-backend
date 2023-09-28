@@ -4,8 +4,8 @@ from uuid import UUID
 
 from common import logger
 from common.errors import ServiceError
+from common.typing import _UnsetSentinel
 from common.typing import UNSET
-from common.typing import Unset
 from repositories import users
 from repositories.users import User
 
@@ -79,7 +79,7 @@ async def fetch_by_discord_id(discord_id: int) -> User | ServiceError:
     return user
 
 
-async def fetch_by_discord_username(discord_username: str) -> User | ServiceError:
+async def fetch_by_discord_username(discord_username: int) -> User | ServiceError:
     try:
         user = await users.fetch_by_discord_username(discord_username)
     except Exception as exc:  # pragma: no cover
@@ -107,15 +107,15 @@ async def fetch_by_verification_code(verification_code: str) -> User | ServiceEr
 
 async def partial_update(
     user_id: int,
-    discord_id: str | Unset = UNSET,
-    discord_username: str | Unset = UNSET,
-    osu_id: str | Unset = UNSET,
-    osu_username: str | Unset = UNSET,
-    verified: bool | Unset = UNSET,
-    verification_code: str | Unset = UNSET,
-    access_token: str | Unset = UNSET,
-    refresh_token: str | Unset = UNSET,
-    session_id: UUID | None = None,
+    discord_id: int | _UnsetSentinel = UNSET,
+    discord_username: str | _UnsetSentinel = UNSET,
+    osu_id: int | None | _UnsetSentinel = UNSET,
+    osu_username: str | None | _UnsetSentinel = UNSET,
+    verified: bool | _UnsetSentinel = UNSET,
+    verification_code: str | _UnsetSentinel = UNSET,
+    access_token: str | None | _UnsetSentinel = UNSET,
+    refresh_token: str | None | _UnsetSentinel = UNSET,
+    session_id: UUID | None | _UnsetSentinel = UNSET,
 ) -> User | ServiceError:
     try:
         user = await users.partial_update(

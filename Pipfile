@@ -4,17 +4,18 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-databases = {extras = ["asyncpg"], version = "*"}
-structlog = "*"
-python-dotenv = "*"
-fastapi = {extras = ["all"], version = "*"}
-"discord.py" = "*"
 aiosu = "*"
 asyncpg = "*"
+databases = {extras = ["asyncpg"], version = "*"}
+"discord.py" = "*"
+fastapi = {extras = ["all"], version = "*"}
 fastapi-sessions = "*"
+structlog = "*"
+python-dotenv = "*"
 
 [dev-packages]
 black = "*"
+mypy = "*"
 pre-commit = "*"
 reorder-python-imports = "*"
 

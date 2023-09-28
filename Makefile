@@ -1,9 +1,6 @@
 shell:
 	pipenv shell
 
-lint:
-	pipenv run pre-commit run --all-files
-
 install:
 	PIPENV_VENV_IN_PROJECT=1 pipenv install
 
@@ -14,14 +11,17 @@ install-dev:
 uninstall:
 	pipenv --rm
 
+lint:
+	pipenv run pre-commit run --all-files
+
+type-check:
+	pipenv run mypy .
+
 update:
 	pipenv update --dev
 
 clean:
 	pipenv clean
 
-run-app:
-	pipenv run scripts/bootstrap.sh
-
-deploy:
-	PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+run:
+	pipenv run scripts/run_api.sh
