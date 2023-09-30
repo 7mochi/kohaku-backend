@@ -6,6 +6,7 @@ from uuid import uuid4
 import aiosu
 from aiosu.utils import auth
 from api.osu.models import User
+from common import clients
 from common import logger
 from common import settings
 from common.errors import ServiceError
@@ -67,9 +68,8 @@ async def auth_handler(request: Request) -> Response:
     except:
         raise HTTPException(status_code=403, detail="Invalid osu! code")
 
-    client_storage = aiosu.v2.Client(token=token)
-    osu_user = await client_storage.get_me()
-    await client_storage.close()
+    client = await clients.osu_storage.get_client(id=user["user_id"], token=token)
+    osu_user = await client.get_me()
 
     session = uuid4()
     _user = await users.partial_update(
@@ -79,6 +79,7 @@ async def auth_handler(request: Request) -> Response:
         verified=True,
         access_token=token.access_token,
         refresh_token=token.refresh_token,
+        token_expires_on=token.expires_on,
         session_id=session,
     )
 
@@ -115,17 +116,7 @@ async def deauth_handler(
         f"User {_user['discord_username']} ({_user['discord_id']}) with osu! account {_user['osu_username']} ({_user['osu_id']}) deauthenticated successfully",  # type: ignore
     )
 
-    assert _user is not None
-    await users.partial_update(
-        user_id=_user["user_id"],  # type: ignore
-        osu_id=None,
-        osu_username=None,
-        verified=False,
-        access_token=None,
-        refresh_token=None,
-        session_id=None,
-    )
-
+    await clients.osu_storage.revoke_client(client_uid=int(_user["user_id"]))  # type: ignore
     return Response(status_code=200)
 
 

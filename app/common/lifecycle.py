@@ -3,10 +3,12 @@ from __future__ import annotations
 import base64
 import ssl
 
+import aiosu
 from adapters import database
 from common import clients
 from common import logger
 from common import settings
+from repositories import token
 
 
 async def _start_database() -> None:
@@ -58,9 +60,28 @@ async def _shutdown_database() -> None:
     logger.info("Closed database connection")
 
 
+async def _start_osu_storage() -> None:
+    logger.info("Starting osu! token storage...")
+    clients.osu_storage = aiosu.v2.ClientStorage(
+        token_repository=token.TokenRepository(),
+        client_id=settings.OSU_CLIENT_ID,
+        client_secret=settings.OSU_CLIENT_SECRET,
+    )
+    logger.info("Started osu! token storage")
+
+
+async def _shutdown_osu_storage() -> None:
+    logger.info("Closing osu! token storage...")
+    await clients.osu_storage.close()
+    del clients.osu_storage
+    logger.info("Closed osu! token storage")
+
+
 async def start() -> None:
     await _start_database()
+    await _start_osu_storage()
 
 
 async def shutdown() -> None:
     await _shutdown_database()
+    await _shutdown_osu_storage()

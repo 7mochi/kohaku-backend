@@ -5,9 +5,10 @@ CREATE TABLE users (
     osu_id TEXT NULL,
     osu_username TEXT NULL,
     verified BOOLEAN NOT NULL DEFAULT FALSE,
-    verification_code TEXT NOT NULL,
+    verification_code TEXT NULL,
     access_token TEXT NULL,
     refresh_token TEXT NULL,
+    token_expires_on TIMESTAMPTZ NULL,
     session_id UUID NULL,
     created_at TIMESTAMPTZ NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL

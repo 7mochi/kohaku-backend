@@ -19,6 +19,7 @@ READ_PARAMS = """
     verification_code,
     access_token,
     refresh_token,
+    token_expires_on,
     session_id,
     created_at,
     updated_at
@@ -32,9 +33,10 @@ class User(TypedDict):
     osu_id: str | None
     osu_username: str | None
     verified: bool
-    verification_code: str
+    verification_code: str | None
     access_token: str | None
     refresh_token: str | None
+    token_expires_on: datetime | None
     session_id: UUID | None
     created_at: datetime
     updated_at: datetime
@@ -46,9 +48,10 @@ class UserUpdateFields(TypedDict, total=False):
     osu_id: str | None
     osu_username: str | None
     verified: bool
-    verification_code: str
+    verification_code: str | None
     access_token: str | None
     refresh_token: str | None
+    token_expires_on: datetime | None
     session_id: UUID | None
 
 
@@ -61,16 +64,17 @@ async def create(
     verification_code: str,
     access_token: str | None = None,
     refresh_token: str | None = None,
+    token_expires_on: datetime | None = None,
     session_id: UUID | None = None,
 ) -> User:
     user = await clients.database.fetch_one(
         query=f"""\
             INSERT INTO users (discord_id, discord_username, osu_id, osu_username,
                                verified, verification_code, access_token, refresh_token,
-                               session_id, created_at, updated_at)
+                               token_expires_on, session_id, created_at, updated_at)
             VALUES (:discord_id, :discord_username, :osu_id, :osu_username,
                     :verified, :verification_code,:access_token, :refresh_token,
-                    :session_id, NOW(), NOW())
+                    :token_expires_on, :session_id, NOW(), NOW())
             RETURNING {READ_PARAMS}
         """,
         values={
@@ -82,6 +86,7 @@ async def create(
             "verification_code": verification_code,
             "access_token": access_token,
             "refresh_token": refresh_token,
+            "token_expires_on": token_expires_on,
             "session_id": session_id,
         },
     )
@@ -178,9 +183,10 @@ async def partial_update(
     osu_id: str | None | _UnsetSentinel = UNSET,
     osu_username: str | None | _UnsetSentinel = UNSET,
     verified: bool | _UnsetSentinel = UNSET,
-    verification_code: str | _UnsetSentinel = UNSET,
+    verification_code: str | None | _UnsetSentinel = UNSET,
     access_token: str | None | _UnsetSentinel = UNSET,
     refresh_token: str | None | _UnsetSentinel = UNSET,
+    token_expires_on: datetime | None | _UnsetSentinel = UNSET,
     session_id: UUID | None | _UnsetSentinel = UNSET,
 ) -> User | None:
     update_fields: UserUpdateFields = {}
@@ -200,6 +206,8 @@ async def partial_update(
         update_fields["access_token"] = access_token
     if not isinstance(refresh_token, _UnsetSentinel):
         update_fields["refresh_token"] = refresh_token
+    if not isinstance(token_expires_on, _UnsetSentinel):
+        update_fields["token_expires_on"] = token_expires_on
     if not isinstance(session_id, _UnsetSentinel):
         update_fields["session_id"] = session_id
 
