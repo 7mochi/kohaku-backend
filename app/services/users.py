@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from common import logger
@@ -19,6 +20,7 @@ async def create(
     osu_username: str | None = None,
     access_token: str | None = None,
     refresh_token: str | None = None,
+    token_expires_on: datetime | None = None,
     session_id: UUID | None = None,
 ) -> User | ServiceError:
     try:
@@ -31,6 +33,7 @@ async def create(
             verification_code=verification_code,
             access_token=access_token,
             refresh_token=refresh_token,
+            token_expires_on=token_expires_on,
             session_id=session_id,
         )
     except Exception as exc:  # pragma: no cover
@@ -112,9 +115,10 @@ async def partial_update(
     osu_id: str | None | _UnsetSentinel = UNSET,
     osu_username: str | None | _UnsetSentinel = UNSET,
     verified: bool | _UnsetSentinel = UNSET,
-    verification_code: str | _UnsetSentinel = UNSET,
+    verification_code: str | None | _UnsetSentinel = UNSET,
     access_token: str | None | _UnsetSentinel = UNSET,
     refresh_token: str | None | _UnsetSentinel = UNSET,
+    token_expires_on: datetime | None | _UnsetSentinel = UNSET,
     session_id: UUID | None | _UnsetSentinel = UNSET,
 ) -> User | ServiceError:
     try:
@@ -128,6 +132,7 @@ async def partial_update(
             verification_code=verification_code,
             access_token=access_token,
             refresh_token=refresh_token,
+            token_expires_on=token_expires_on,
             session_id=session_id,
         )
     except Exception as exc:  # pragma: no cover
