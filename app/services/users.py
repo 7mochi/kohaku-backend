@@ -3,7 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
+from aiosu.utils import auth
+from common import clients
 from common import logger
+from common import settings
 from common.errors import ServiceError
 from common.typing import _UnsetSentinel
 from common.typing import UNSET
@@ -39,6 +42,64 @@ async def create(
     except Exception as exc:  # pragma: no cover
         logger.error("Failed to create user", exc_info=exc)
         return ServiceError.INTERNAL_SERVER_ERROR
+
+    return user
+
+
+async def verify(
+    kohaku_code: str,
+    osu_code: str,
+    session_id: UUID,
+) -> User | ServiceError:
+    try:
+        user = await users.fetch_by_verification_code(kohaku_code)
+
+        if user is None:
+            return ServiceError.USER_NOT_FOUND
+
+        if user["verified"]:
+            return ServiceError.USER_ALREADY_VERIFIED
+
+        token = await auth.process_code(
+            client_id=settings.OSU_CLIENT_ID,
+            client_secret=settings.OSU_CLIENT_SECRET,
+            redirect_uri=settings.OSU_REDIRECT_URI,
+            code=osu_code,
+        )
+
+        client = await clients.osu_storage.get_client(id=user["user_id"], token=token)
+        osu_user = await client.get_me()
+
+        user = await users.partial_update(
+            user_id=user["user_id"],
+            osu_id=str(osu_user.id),
+            osu_username=osu_user.username,
+            verified=True,
+            access_token=token.access_token,
+            refresh_token=token.refresh_token,
+            token_expires_on=token.expires_on,
+            session_id=session_id,
+        )
+    except Exception as exc:  # pragma: no cover
+        logger.error("Failed to verify user", exc_info=exc)
+        return ServiceError.INTERNAL_SERVER_ERROR
+
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    return user
+
+
+async def remove_verification(discord_id: str) -> User | ServiceError:
+    user = await users.fetch_by_discord_id(discord_id)
+
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    if not user["verified"]:
+        return ServiceError.USER_NOT_VERIFIED
+
+    await clients.osu_storage.revoke_client(client_uid=int(user["user_id"]))
 
     return user
 

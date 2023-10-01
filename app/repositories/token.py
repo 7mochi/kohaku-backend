@@ -23,7 +23,7 @@ class TokenRepository(BaseTokenRepository):  # type: ignore
             if user is ServiceError.USER_NOT_FOUND:
                 return False
 
-        return user["access_token"] is not None
+        return user["access_token"] is not None  # type: ignore
 
     async def get(self, user_id: int) -> OAuthToken:
         """Get osu! token from database.
