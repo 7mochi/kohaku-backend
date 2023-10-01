@@ -16,6 +16,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Response
+from fastapi import status
 from fastapi_sessions.backends.implementations import InMemoryBackend
 from fastapi_sessions.frontends.implementations import CookieParameters
 from fastapi_sessions.frontends.implementations import SessionCookie
@@ -42,6 +43,24 @@ cookie_verifier = BasicVerifier(
 )
 
 
+def determine_status_code(error: ServiceError) -> int:
+    match error:
+        case ServiceError.USER_NOT_FOUND:
+            return status.HTTP_404_NOT_FOUND
+        case ServiceError.USER_ALREADY_VERIFIED:
+            return status.HTTP_409_CONFLICT
+        case ServiceError.USER_NOT_VERIFIED:
+            return status.HTTP_403_FORBIDDEN
+        case ServiceError.INTERNAL_SERVER_ERROR:
+            return status.HTTP_500_INTERNAL_SERVER_ERROR
+        case _:
+            logger.warning(
+                "Unhandled error code in accounts rest api controller",
+                service_error=error,
+            )
+            return status.HTTP_500_INTERNAL_SERVER_ERROR
+
+
 @auth_router.post("/auth")
 async def auth_handler(request: Request) -> Response:
     body = await request.json()
@@ -49,48 +68,25 @@ async def auth_handler(request: Request) -> Response:
     if "kohaku_code" not in body or "osu_code" not in body:
         raise HTTPException(status_code=400, detail="Missing codes in request body")
 
-    user = await users.fetch_by_verification_code(body["kohaku_code"])
-
-    if isinstance(user, ServiceError):
-        if user is ServiceError.USER_NOT_FOUND:
-            raise HTTPException(status_code=404, detail="User not found")
-
-    if user["verified"]:  # type: ignore
-        raise HTTPException(status_code=403, detail="User already verified")
-
-    try:
-        token = await auth.process_code(
-            client_id=settings.OSU_CLIENT_ID,
-            client_secret=settings.OSU_CLIENT_SECRET,
-            redirect_uri=settings.OSU_REDIRECT_URI,
-            code=body["osu_code"],
-        )
-    except:
-        raise HTTPException(status_code=403, detail="Invalid osu! code")
-
-    client = await clients.osu_storage.get_client(id=user["user_id"], token=token)
-    osu_user = await client.get_me()
-
-    session = uuid4()
-    _user = await users.partial_update(
-        user_id=user["user_id"],  # type: ignore
-        osu_id=str(osu_user.id),
-        osu_username=osu_user.username,
-        verified=True,
-        access_token=token.access_token,
-        refresh_token=token.refresh_token,
-        token_expires_on=token.expires_on,
-        session_id=session,
+    session_id = uuid4()
+    user = await users.verify(
+        kohaku_code=body["kohaku_code"],
+        osu_code=body["osu_code"],
+        session_id=session_id,
     )
 
-    user_mdl = User.parse_obj(_user)
-    await cookie_backend.create(session_id=session, data=user_mdl)
+    if isinstance(user, ServiceError):
+        status_code = determine_status_code(user)
+        raise HTTPException(status_code=status_code, detail="Failed to verify user")
+
+    user_mdl = User.parse_obj(user)
+    await cookie_backend.create(session_id=session_id, data=user_mdl)
 
     response = Response(user_mdl.json(), status_code=200, media_type="application/json")
-    cookie.attach_to_response(response, session)
+    cookie.attach_to_response(response, session_id)
 
     logger.info(
-        f"User {_user['discord_username']} ({_user['discord_id']}) with osu! account {_user['osu_username']} ({_user['osu_id']}) verified successfully",  # type: ignore
+        f"User {user['discord_username']} ({user['discord_id']}) with osu! account {user['osu_username']} ({user['osu_id']}) verified successfully",
     )
 
     return response
@@ -98,17 +94,13 @@ async def auth_handler(request: Request) -> Response:
 
 @auth_router.post("/deauth", dependencies=[Depends(cookie)])
 async def deauth_handler(
-    request: Request,
     user: User = Depends(cookie_verifier),
 ) -> Response:
-    _user = await users.fetch_by_discord_id(user.discord_id)
+    _user = await users.remove_verification(user.discord_id)
 
-    if isinstance(_user, ServiceError):
-        if _user is ServiceError.USER_NOT_FOUND:
-            raise HTTPException(status_code=404, detail="User not found")
-
-    if not _user["verified"]:  # type: ignore
-        raise HTTPException(status_code=403, detail="User not verified")
+    if isinstance(user, ServiceError):
+        status_code = determine_status_code(user)
+        raise HTTPException(status_code=status_code, detail="Failed to verify user")
 
     await cookie_backend.delete(session_id=_user["session_id"])  # type: ignore
 
@@ -116,7 +108,6 @@ async def deauth_handler(
         f"User {_user['discord_username']} ({_user['discord_id']}) with osu! account {_user['osu_username']} ({_user['osu_id']}) deauthenticated successfully",  # type: ignore
     )
 
-    await clients.osu_storage.revoke_client(client_uid=int(_user["user_id"]))  # type: ignore
     return Response(status_code=200)
 
 
