@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from uuid import UUID
+from typing import cast
 from uuid import uuid4
 
-import aiosu
 from aiosu.utils import auth
-from api.osu.models import User
+from api.osu.models import User as UserModel
 from common import clients
 from common import logger
 from common import settings
 from common.errors import ServiceError
+from common.session_backend import DatabaseBackend
 from common.session_verifier import BasicVerifier
 from fastapi import APIRouter
 from fastapi import Depends
@@ -17,9 +17,9 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
-from fastapi_sessions.backends.implementations import InMemoryBackend
 from fastapi_sessions.frontends.implementations import CookieParameters
 from fastapi_sessions.frontends.implementations import SessionCookie
+from repositories.users import User
 from services import users
 
 auth_router = APIRouter(default_response_class=Response)
@@ -33,7 +33,7 @@ cookie = SessionCookie(
     secret_key=settings.SESSION_COOKIE_KEY,
     cookie_params=cookie_params,
 )
-cookie_backend = InMemoryBackend[UUID, User]()
+cookie_backend = DatabaseBackend()
 
 cookie_verifier = BasicVerifier(
     identifier=settings.SESSION_COOKIE_IDENTIFIER,
@@ -79,7 +79,7 @@ async def auth_handler(request: Request) -> Response:
         status_code = determine_status_code(user)
         raise HTTPException(status_code=status_code, detail="Failed to verify user")
 
-    user_mdl = User.parse_obj(user)
+    user_mdl = UserModel.parse_obj(user)
     await cookie_backend.create(session_id=session_id, data=user_mdl)
 
     response = Response(user_mdl.json(), status_code=200, media_type="application/json")
@@ -94,9 +94,10 @@ async def auth_handler(request: Request) -> Response:
 
 @auth_router.post("/deauth", dependencies=[Depends(cookie)])
 async def deauth_handler(
-    user: User = Depends(cookie_verifier),
+    user: UserModel = Depends(cookie_verifier),
 ) -> Response:
-    _user = await users.remove_verification(user.discord_id)
+    _user = cast(User, dict(user))
+    _user = await users.remove_verification(_user["discord_id"])
 
     if isinstance(user, ServiceError):
         status_code = determine_status_code(user)
@@ -112,5 +113,5 @@ async def deauth_handler(
 
 
 @auth_router.get("/user", dependencies=[Depends(cookie)])
-async def user_handler(user: User = Depends(cookie_verifier)) -> Response:
+async def user_handler(user: UserModel = Depends(cookie_verifier)) -> Response:
     return Response(user.json(), media_type="application/json")

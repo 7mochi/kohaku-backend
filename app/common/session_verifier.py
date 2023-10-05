@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from api.osu.models import User
+from common.session_backend import DatabaseBackend
 from fastapi import HTTPException
-from fastapi_sessions.backends.implementations import InMemoryBackend
 from fastapi_sessions.session_verifier import SessionVerifier
+from repositories.users import User
 
 
 class BasicVerifier(SessionVerifier[UUID, User]):  # type: ignore
@@ -14,7 +14,7 @@ class BasicVerifier(SessionVerifier[UUID, User]):  # type: ignore
         *,
         identifier: str,
         auto_error: bool,
-        backend: InMemoryBackend[UUID, User],
+        backend: DatabaseBackend,
         auth_http_exception: HTTPException,
     ):
         self._identifier = identifier
@@ -27,7 +27,7 @@ class BasicVerifier(SessionVerifier[UUID, User]):  # type: ignore
         return self._identifier
 
     @property
-    def backend(self) -> InMemoryBackend[UUID, User]:
+    def backend(self) -> DatabaseBackend:
         return self._backend
 
     @property

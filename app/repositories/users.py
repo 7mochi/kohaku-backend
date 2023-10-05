@@ -176,6 +176,21 @@ async def fetch_by_verification_code(verification_code: str) -> User | None:
     return cast(User, user) if user is not None else None
 
 
+async def fetch_by_session_id(session_id: UUID) -> User | None:
+    user = await clients.database.fetch_one(
+        query=f"""\
+            SELECT {READ_PARAMS}
+            FROM users
+            WHERE session_id = :session_id
+        """,
+        values={
+            "session_id": session_id,
+        },
+    )
+
+    return cast(User, user) if user is not None else None
+
+
 async def partial_update(
     user_id: int,
     discord_id: str | _UnsetSentinel = UNSET,

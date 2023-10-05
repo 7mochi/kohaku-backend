@@ -99,7 +99,8 @@ async def remove_verification(discord_id: str) -> User | ServiceError:
     if not user["verified"]:
         return ServiceError.USER_NOT_VERIFIED
 
-    await clients.osu_storage.revoke_client(client_uid=int(user["user_id"]))
+    client = await clients.osu_storage.get_client(id=user["user_id"])
+    await client.revoke_token()
 
     return user
 
@@ -159,6 +160,19 @@ async def fetch_by_discord_username(discord_username: int) -> User | ServiceErro
 async def fetch_by_verification_code(verification_code: str) -> User | ServiceError:
     try:
         user = await users.fetch_by_verification_code(verification_code)
+    except Exception as exc:  # pragma: no cover
+        logger.error("Failed to fetch user", exc_info=exc)
+        return ServiceError.INTERNAL_SERVER_ERROR
+
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    return user
+
+
+async def fetch_by_session_id(session_id: UUID) -> User | ServiceError:
+    try:
+        user = await users.fetch_by_session_id(session_id)
     except Exception as exc:  # pragma: no cover
         logger.error("Failed to fetch user", exc_info=exc)
         return ServiceError.INTERNAL_SERVER_ERROR
