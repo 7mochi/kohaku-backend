@@ -97,7 +97,7 @@ async def deauth_handler(
     user: UserModel = Depends(cookie_verifier),
 ) -> Response:
     _user = cast(User, dict(user))
-    _user = await users.remove_verification(_user["discord_id"])
+    _user = await users.remove_verification(_user["discord_id"])  # type: ignore
 
     if isinstance(user, ServiceError):
         status_code = determine_status_code(user)
@@ -106,7 +106,7 @@ async def deauth_handler(
     await cookie_backend.delete(session_id=_user["session_id"])  # type: ignore
 
     logger.info(
-        f"User {_user['discord_username']} ({_user['discord_id']}) with osu! account {_user['osu_username']} ({_user['osu_id']}) deauthenticated successfully",  # type: ignore
+        f"User {_user['discord_username']} ({_user['discord_id']}) with osu! account {_user['osu_username']} ({_user['osu_id']}) deauthenticated successfully",
     )
 
     return Response(status_code=200)

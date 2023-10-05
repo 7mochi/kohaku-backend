@@ -100,6 +100,7 @@ async def remove_verification(discord_id: str) -> User | ServiceError:
         return ServiceError.USER_NOT_VERIFIED
 
     client = await clients.osu_storage.get_client(id=user["user_id"])
+    await clients.osu_storage.revoke_client(client_uid=user["user_id"])
     await client.revoke_token()
 
     return user
