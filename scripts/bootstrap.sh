@@ -11,10 +11,6 @@ case $APP_COMPONENT in
     exec scripts/run_api.sh
     ;;
 
-  "bot")
-    exec python app/bot.py
-    ;;
-
   *)
     echo "'$APP_COMPONENT' isn't a known value for APP_COMPONENT"
     ;;

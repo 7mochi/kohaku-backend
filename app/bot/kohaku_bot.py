@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-import atexit
 from typing import Any
 
 import discord
 from bot.auth_view import AuthenticationView
-from common import lifecycle
 from common import logger
-from common import settings
 
 
 class Bot(discord.Client):
-    def __init__(self: Any, verify_channel_id: int, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self: Any, verify_channel_id: int, guild_id: int, *args: Any, **kwargs: Any
+    ) -> None:
         super().__init__(*args, **kwargs)
+        self.guild_id = guild_id
         self.verify_channel_id = verify_channel_id
 
     async def start(self, *args: Any, **kwargs: Any) -> None:
@@ -42,10 +42,36 @@ class Bot(discord.Client):
             await channel.send("", view=AuthenticationView())
             logger.info("Verification button created")
 
+    async def give_role(self, user_id: int, role_id: int) -> None:
+        guild = self.get_guild(self.guild_id)
+
+        assert guild is not None
+
+        discord_member = await guild.fetch_member(user_id)
+        role = guild.get_role(role_id)
+
+        assert discord_member is not None
+        assert role is not None
+
+        await discord_member.remove_roles(role)
+        await discord_member.add_roles(role)
+
+    async def remove_role(self, user_id: int, role_id: int) -> None:
+        guild = self.get_guild(self.guild_id)
+
+        assert guild is not None
+
+        discord_member = await guild.fetch_member(user_id)
+        role = guild.get_role(role_id)
+
+        assert discord_member is not None
+        assert role is not None
+
+        await discord_member.remove_roles(role)
+
     async def on_ready(self) -> None:
         # Register persistent view
         await self.setup_verify_channel()
-        await lifecycle.start()
 
         assert self.user is not None
         logger.info(f"Logged in as {self.user} (ID: {self.user.id})")

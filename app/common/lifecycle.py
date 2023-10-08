@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import base64
 import ssl
 
 import aiosu
+import discord
 from adapters import database
 from common import clients
 from common import logger
@@ -70,6 +72,35 @@ async def _start_osu_storage() -> None:
     logger.info("Started osu! token storage")
 
 
+async def _start_discord_bot() -> None:
+    logger.info("Starting discord bot...")
+
+    intents = discord.Intents.default()
+    intents.message_content = True
+
+    # TODO: I don't like this import here but idk how to solve the circular import
+    # Most likely a skill issue :sob:
+    from bot import kohaku_bot as bot
+
+    clients.bot = bot.Bot(
+        intents=intents,
+        verify_channel_id=settings.DISCORD_VERIFY_CHANNEL_ID,
+        guild_id=settings.DISCORD_GUILD_ID,
+    )
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(clients.bot.start(settings.DISCORD_BOT_TOKEN))
+
+    logger.info("Started discord bot")
+
+
+async def _stop_discord_bot() -> None:
+    logger.info("Stopping discord bot...")
+    await clients.bot.close()
+    del clients.bot
+    logger.info("Stopped discord bot")
+
+
 async def _shutdown_osu_storage() -> None:
     logger.info("Closing osu! token storage...")
     await clients.osu_storage.close()
@@ -80,8 +111,10 @@ async def _shutdown_osu_storage() -> None:
 async def start() -> None:
     await _start_database()
     await _start_osu_storage()
+    await _start_discord_bot()
 
 
 async def shutdown() -> None:
     await _shutdown_database()
     await _shutdown_osu_storage()
+    await _stop_discord_bot()
