@@ -50,7 +50,9 @@ WRITE_DB_USE_SSL = read_bool(os.environ["WRITE_DB_USE_SSL"])
 
 # discord
 DISCORD_BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
+DISCORD_GUILD_ID = int(os.environ["DISCORD_GUILD_ID"])
 DISCORD_VERIFY_CHANNEL_ID = int(os.environ["DISCORD_VERIFY_CHANNEL_ID"])
+DISCORD_VERIFIED_ROLE_ID = int(os.environ["DISCORD_VERIFIED_ROLE_ID"])
 
 # osu
 OSU_CLIENT_ID = int(os.environ["OSU_CLIENT_ID"])

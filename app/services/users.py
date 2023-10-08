@@ -70,6 +70,11 @@ async def verify(
         client = await clients.osu_storage.get_client(id=user["user_id"], token=token)
         osu_user = await client.get_me()
 
+        await clients.bot.give_role(
+            int(user["discord_id"]),
+            settings.DISCORD_VERIFIED_ROLE_ID,
+        )
+
         user = await users.partial_update(
             user_id=user["user_id"],
             osu_id=str(osu_user.id),
@@ -102,6 +107,11 @@ async def remove_verification(discord_id: str) -> User | ServiceError:
     client = await clients.osu_storage.get_client(id=user["user_id"])
     await clients.osu_storage.revoke_client(client_uid=user["user_id"])
     await client.revoke_token()
+
+    await clients.bot.remove_role(
+        int(user["discord_id"]),
+        settings.DISCORD_VERIFIED_ROLE_ID,
+    )
 
     return user
 
