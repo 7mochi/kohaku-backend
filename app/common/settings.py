@@ -25,6 +25,9 @@ FRONTEND_URL = (
     f"http://{FRONTEND_HOST}{'' if FRONTEND_PORT == '80' else f':{FRONTEND_PORT}'}"
 )
 
+# domain
+DOMAIN = os.environ["DOMAIN"]
+
 # database
 READ_DB_SCHEME = os.environ["READ_DB_SCHEME"]
 READ_DB_HOST = os.environ["READ_DB_HOST"]
