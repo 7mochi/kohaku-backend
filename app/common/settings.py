@@ -20,10 +20,11 @@ APP_LOG_LEVEL = os.environ["APP_LOG_LEVEL"]
 # frontend
 FRONTEND_HOST = os.environ["FRONTEND_HOST"]
 FRONTEND_PORT = os.environ["FRONTEND_PORT"]
-# TODO: improve this
-FRONTEND_URL = (
-    f"http://{FRONTEND_HOST}{'' if FRONTEND_PORT == '80' else f':{FRONTEND_PORT}'}"
-)
+
+FRONTEND_PROTOCOL = "https" if FRONTEND_PORT == "443" else "http"
+FRONTEND_HOST_SUFFIX = "" if FRONTEND_PORT in ("80", "443") else f":{FRONTEND_PORT}"
+
+FRONTEND_URL = f"{FRONTEND_PROTOCOL}://{FRONTEND_HOST}{FRONTEND_HOST_SUFFIX}"
 
 # domain
 DOMAIN = os.environ["DOMAIN"]

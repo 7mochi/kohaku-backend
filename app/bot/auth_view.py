@@ -47,7 +47,7 @@ class AuthenticationView(discord.ui.View):
                     verification_code=code,
                 )
 
-                await interaction.response.send_message(
+                return await interaction.response.send_message(
                     f"To verify, go to: {settings.FRONTEND_URL}?kohaku_code={code}",
                     ephemeral=True,
                 )
@@ -56,7 +56,7 @@ class AuthenticationView(discord.ui.View):
             logger.info(
                 f"User {interaction.user.name} ({interaction.user.id}) tried to verify again",
             )
-            await interaction.response.send_message(
+            return await interaction.response.send_message(
                 "You're already verified!",
                 ephemeral=True,
             )
@@ -68,7 +68,7 @@ class AuthenticationView(discord.ui.View):
                 verification_code=code,
             )
 
-            await interaction.response.send_message(
+            return await interaction.response.send_message(
                 f"To verify, go to: {settings.FRONTEND_URL}?kohaku_code={code}",
                 ephemeral=True,
             )
