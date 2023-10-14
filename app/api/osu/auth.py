@@ -97,7 +97,7 @@ async def deauth_handler(
     user: UserModel = Depends(cookie_verifier),
 ) -> Response:
     _user = cast(User, dict(user))
-    _user = await users.remove_verification(_user["discord_id"])  # type: ignore
+    _user = await users.remove_verification(_user["discord_id"], True)  # type: ignore
 
     if isinstance(user, ServiceError):
         status_code = determine_status_code(user)

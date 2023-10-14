@@ -77,6 +77,7 @@ async def _start_discord_bot() -> None:
 
     intents = discord.Intents.default()
     intents.message_content = True
+    intents.members = True
 
     # TODO: I don't like this import here but idk how to solve the circular import
     # Most likely a skill issue :sob:

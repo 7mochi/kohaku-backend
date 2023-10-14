@@ -95,7 +95,10 @@ async def verify(
     return user
 
 
-async def remove_verification(discord_id: str) -> User | ServiceError:
+async def remove_verification(
+    discord_id: str,
+    remove_role: bool,
+) -> User | ServiceError:
     user = await users.fetch_by_discord_id(discord_id)
 
     if user is None:
@@ -108,10 +111,11 @@ async def remove_verification(discord_id: str) -> User | ServiceError:
     await clients.osu_storage.revoke_client(client_uid=user["user_id"])
     await client.revoke_token()
 
-    await clients.bot.remove_role(
-        int(user["discord_id"]),
-        settings.DISCORD_VERIFIED_ROLE_ID,
-    )
+    if remove_role:
+        await clients.bot.remove_role(
+            int(user["discord_id"]),
+            settings.DISCORD_VERIFIED_ROLE_ID,
+        )
 
     return user
 

@@ -97,5 +97,6 @@ class TokenRepository(BaseTokenRepository):  # type: ignore
             refresh_token=None,
             token_expires_on=None,
             osu_id=None,
+            osu_username=None,
             session_id=None,
         )
