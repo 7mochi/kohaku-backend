@@ -27,7 +27,7 @@ app.add_middleware(
 )
 
 # auth hosts
-app.host(settings.DOMAIN, auth_router)
+app.host(settings.DOMAIN if settings.DOMAIN else settings.APP_HOST, auth_router)
 
 
 @app.on_event("startup")
