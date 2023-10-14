@@ -5,6 +5,8 @@ from typing import Any
 import discord
 from bot.auth_view import AuthenticationView
 from common import logger
+from common.errors import ServiceError
+from services import users
 
 
 class Bot(discord.Client):
@@ -82,3 +84,22 @@ class Bot(discord.Client):
         ignore |= not self.is_ready()
         if ignore:
             return
+
+    async def on_member_remove(self, member: discord.Member) -> None:
+        user = await users.fetch_by_discord_id(str(member.id))
+
+        if isinstance(user, ServiceError):
+            logger.info(
+                f"The non-verified user {member.name} ({member.id}) left the server. Ignoring...",
+            )
+
+        if user["verified"]:
+            await users.remove_verification(str(member.id), False)
+
+            logger.info(
+                f"The verified user {member.name} ({member.id}) left the server. Verification removed.",
+            )
+        else:
+            logger.info(
+                f"The non-verified user {member.name} ({member.id}) left the server. Ignoring...",
+            )
