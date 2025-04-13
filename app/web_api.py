@@ -19,7 +19,15 @@ logger.configure_logging(
 logger.overwrite_exception_hook()
 atexit.register(logger.restore_exception_hook)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[Any, Any]:
+    await lifecycle.start()
+    yield
+    await lifecycle.shutdown()
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,10 +39,3 @@ app.add_middleware(
 
 # auth hosts
 app.host(settings.DOMAIN if settings.DOMAIN else settings.APP_HOST, auth_router)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[Any, Any]:
-    await lifecycle.start()
-    yield
-    await lifecycle.shutdown()
