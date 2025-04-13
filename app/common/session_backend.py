@@ -1,8 +1,9 @@
 """DatabaseBackend Custom implementation."""
+
 from __future__ import annotations
 
-from typing import cast
 from typing import Generic
+from typing import cast
 from uuid import UUID
 
 from api.osu.models import User as UserModel
@@ -15,7 +16,7 @@ from repositories.users import User
 from services import users
 
 
-class DatabaseBackend(Generic[ID, SessionModel], SessionBackend[ID, SessionModel]):  # type: ignore
+class DatabaseBackend(SessionBackend[UUID, UserModel]):  # type: ignore
     """Stores session data in a dictionary."""
 
     async def create(self, session_id: UUID, data: UserModel) -> None:
@@ -38,7 +39,7 @@ class DatabaseBackend(Generic[ID, SessionModel], SessionBackend[ID, SessionModel
             if user is ServiceError.USER_NOT_FOUND:
                 return None
 
-        return UserModel.parse_obj(user)
+        return UserModel.model_validate(user)
 
     async def update(self, session_id: UUID, data: UserModel) -> None:
         """Update an existing session."""

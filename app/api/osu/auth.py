@@ -79,7 +79,7 @@ async def auth_handler(request: Request) -> Response:
         status_code = determine_status_code(user)
         raise HTTPException(status_code=status_code, detail="Failed to verify user")
 
-    user_mdl = UserModel.parse_obj(user)
+    user_mdl = UserModel.model_validate(user)
     await cookie_backend.create(session_id=session_id, data=user_mdl)
 
     response = Response(user_mdl.json(), status_code=200, media_type="application/json")
@@ -96,12 +96,19 @@ async def auth_handler(request: Request) -> Response:
 async def deauth_handler(
     user: UserModel = Depends(cookie_verifier),
 ) -> Response:
-    _user = cast(User, dict(user))
-    _user = await users.remove_verification(_user["discord_id"], True)  # type: ignore
-
     if isinstance(user, ServiceError):
         status_code = determine_status_code(user)
         raise HTTPException(status_code=status_code, detail="Failed to verify user")
+
+    _user = cast(User, dict(user))
+    _user = await users.remove_verification(_user["discord_id"], True)  # type: ignore
+
+    if isinstance(_user, ServiceError):
+        status_code = determine_status_code(_user)
+        raise HTTPException(
+            status_code=status_code,
+            detail="Failed to remove verification",
+        )
 
     await cookie_backend.delete(session_id=_user["session_id"])  # type: ignore
 

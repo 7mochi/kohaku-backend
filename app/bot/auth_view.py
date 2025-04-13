@@ -7,6 +7,8 @@ import discord
 from common import logger
 from common import settings
 from common.errors import ServiceError
+from discord import Client
+from discord import InteractionCallbackResponse
 from services import users
 
 
@@ -23,9 +25,9 @@ class AuthenticationView(discord.ui.View):
     )
     async def button_callback(
         self,
-        interaction: discord.Interaction,  # type: ignore
+        interaction: discord.Interaction,
         button: discord.ui.Button,  # type: ignore
-    ) -> None:
+    ) -> InteractionCallbackResponse[Client]:
         user = await users.fetch_by_discord_id(str(interaction.user.id))
 
         if isinstance(user, ServiceError):

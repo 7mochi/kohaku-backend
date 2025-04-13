@@ -11,7 +11,11 @@ from services import users
 
 class Bot(discord.Client):
     def __init__(
-        self: Any, verify_channel_id: int, guild_id: int, *args: Any, **kwargs: Any
+        self: Any,
+        verify_channel_id: int,
+        guild_id: int,
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.guild_id = guild_id
@@ -92,6 +96,7 @@ class Bot(discord.Client):
             logger.info(
                 f"The non-verified user {member.name} ({member.id}) left the server. Ignoring...",
             )
+            return
 
         if user["verified"]:
             await users.remove_verification(str(member.id), False)

@@ -1,27 +1,21 @@
 shell:
-	pipenv shell
-
-install:
-	PIPENV_VENV_IN_PROJECT=1 pipenv install
-
-install-dev:
-	PIPENV_VENV_IN_PROJECT=1 pipenv install --dev
-	pipenv run pre-commit install
-
-uninstall:
-	pipenv --rm
+	poetry shell
 
 lint:
-	pipenv run pre-commit run --all-files
+	poetry run pre-commit run --all-files
 
 type-check:
-	pipenv run mypy .
+	poetry run mypy .
 
-update:
-	pipenv update --dev
+install:
+	POETRY_VIRTUALENVS_IN_PROJECT=1 poetry install --no-root
 
-clean:
-	pipenv clean
+install-dev:
+	POETRY_VIRTUALENVS_IN_PROJECT=1 poetry install --no-root --with dev
+	poetry run pre-commit install
+
+uninstall:
+	poetry env remove python
 
 run:
-	pipenv run scripts/bootstrap.sh
+	poetry run scripts/bootstrap.sh

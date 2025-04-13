@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from api.osu.models import User as UserModel
 from common.session_backend import DatabaseBackend
 from fastapi import HTTPException
 from fastapi_sessions.session_verifier import SessionVerifier
-from repositories.users import User
 
 
-class BasicVerifier(SessionVerifier[UUID, User]):  # type: ignore
+class BasicVerifier(SessionVerifier[UUID, UserModel]):  # type: ignore
     def __init__(
         self,
         *,
@@ -38,6 +38,6 @@ class BasicVerifier(SessionVerifier[UUID, User]):  # type: ignore
     def auth_http_exception(self) -> HTTPException:
         return self._auth_http_exception
 
-    def verify_session(self, model: User) -> bool:
+    def verify_session(self, model: UserModel) -> bool:
         """If the session exists, it is valid"""
         return True

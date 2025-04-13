@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import atexit
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Any
 
 from api.osu.auth import auth_router
 from common import lifecycle
@@ -30,11 +33,8 @@ app.add_middleware(
 app.host(settings.DOMAIN if settings.DOMAIN else settings.APP_HOST, auth_router)
 
 
-@app.on_event("startup")
-async def startup() -> None:
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[Any, Any]:
     await lifecycle.start()
-
-
-@app.on_event("shutdown")
-async def shutdown() -> None:
+    yield
     await lifecycle.shutdown()

@@ -104,7 +104,7 @@ async def _stop_discord_bot() -> None:
 
 async def _shutdown_osu_storage() -> None:
     logger.info("Closing osu! token storage...")
-    await clients.osu_storage.close()
+    await clients.osu_storage.aclose()
     del clients.osu_storage
     logger.info("Closed osu! token storage")
 
